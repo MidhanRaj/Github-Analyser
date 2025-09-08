@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GitHub Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>GitHub Analyzer</h1>
+        <input type="text" id="username" placeholder="Enter GitHub username">
+        <button onclick="analyze()">Analyze</button>
+
+        <div class="profile-card" id="profile"></div>
+        <div class="ai-analysis" id="analysis"></div>
+    </div>
+
+    <script>
+        async function analyze() {
+            const username = document.getElementById("username").value;
+            document.getElementById("profile").innerHTML = "Loading...";
+            document.getElementById("analysis").innerHTML = "";
+
+            const res = await fetch("/analyze", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({username: username})
+            });
+
+            if (res.status === 404) {
+                document.getElementById("profile").innerHTML = "User not found or API error.";
+                document.getElementById("analysis").innerHTML = "No data (server returned 404).";
+                return;
+            }
+
+            const data = await res.json();
+
+            document.getElementById("profile").innerHTML = `
+                <img src="${data.avatar}" alt="avatar" class="avatar">
+                <h2>${data.name || data.username}</h2>
+                <p>${data.bio || "No bio available"}</p>
+                <p><b>${data.followers}</b> Followers</p>
+                <p><b>${data.repos}</b> Repos</p>
+                <p><b>${data.stars}</b> Stars</p>
+                <p>Languages: ${Object.keys(data.languages).join(", ")}</p>
+            `;
+
+            document.getElementById("analysis").innerHTML = `
+                <h3>AI Analysis</h3>
+                <p>${data.ai_analysis}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
+
+
