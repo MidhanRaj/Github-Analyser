@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Profile Analyzer</title>
+    <link rel="stylesheet" href="static/style.css"> <!-- External CSS -->
+</head>
+<body>
+    <div class="container">
+        <!-- Left: Profile Details -->
+        <aside class="profile-card" id="profile">
+            <div class="empty">Enter a GitHub username and click Analyze.</div>
+        </aside>
+
+        <!-- Right: AI Analysis -->
+        <section class="main-card">
+            <div class="form-row">
+                <input type="text" id="username" class="input" placeholder="Enter GitHub username">
+                <button class="button" onclick="analyze()">Analyze</button>
+            </div>
+            <h2>AI Analysis</h2>
+            <div id="ai-analysis" class="analysis"></div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        async function analyze() {
+            const username = document.getElementById('username').value;
+            if (!username) return alert("Enter a GitHub username");
+
+            document.getElementById('ai-analysis').innerHTML = '<div class="loader"></div>';
+
+            const res = await fetch('/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+
+            const data = await res.json();
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            // Profile Info
+            document.getElementById('profile').innerHTML = `
+                <div class="profile-header">
+                    <img src="${data.avatar}" alt="Avatar" class="profile-avatar">
+                    <div>
+                        <div class="profile-name">${data.name || data.username}</div>
+                        <div class="profile-bio">${data.bio || "No bio available"}</div>
+                    </div>
+                </div>
+                <div class="stats">
+                    <div class="stat"><div class="num">${data.followers}</div><div class="lbl">Followers</div></div>
+                    <div class="stat"><div class="num">${data.following}</div><div class="lbl">Following</div></div>
+                    <div class="stat"><div class="num">${data.repos}</div><div class="lbl">Repos</div></div>
+                    <div class="stat"><div class="num">${data.stars}</div><div class="lbl">Stars</div></div>
+                </div>
+                <div class="lang-badges">
+                    ${Object.keys(data.languages).map(lang => `<span class="lang">${lang}</span>`).join('')}
+                </div>
+            `;
+
+            // AI Analysis (Render Markdown as HTML)
+            document.getElementById('ai-analysis').innerHTML = marked.parse(data.ai_analysis);
+        }
+    </script>
+</body>
+</html>
