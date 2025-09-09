@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Profile Analyzer</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { display: flex; gap: 20px; }
+        .left, .right { flex: 1; }
+        .ai-analysis { background: #f9f9f9; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .ai-analysis h2, .ai-analysis h3 { color: #333; }
+        img { border-radius: 50%; width: 100px; }
+    </style>
+</head>
+<body>
+    <h1>GitHub Profile Analyzer</h1>
+    <input type="text" id="username" placeholder="Enter GitHub username">
+    <button onclick="analyze()">Analyze</button>
+
+    <div class="container">
+        <!-- Left: Profile Details -->
+        <div class="left" id="profile"></div>
+
+        <!-- Right: AI Analysis -->
+        <div class="right">
+            <h2>AI Analysis</h2>
+            <div id="ai-analysis" class="ai-analysis"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        async function analyze() {
+            const username = document.getElementById('username').value;
+            if (!username) return alert("Enter a GitHub username");
+
+            const res = await fetch('/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+
+            const data = await res.json();
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            // Profile Info
+            document.getElementById('profile').innerHTML = `
+                <img src="${data.avatar}" alt="Avatar">
+                <h2>${data.name || data.username}</h2>
+                <p>${data.bio || "No bio available"}</p>
+                <p><strong>Followers:</strong> ${data.followers}</p>
+                <p><strong>Following:</strong> ${data.following}</p>
+                <p><strong>Repositories:</strong> ${data.repos}</p>
+                <p><strong>Stars:</strong> ${data.stars}</p>
+                <p><strong>Languages:</strong> ${Object.keys(data.languages).join(", ")}</p>
+            `;
+
+            // AI Analysis (Render Markdown as HTML)
+            document.getElementById('ai-analysis').innerHTML = marked.parse(data.ai_analysis);
+        }
+    </script>
+</body>
+</html>
